@@ -10,12 +10,10 @@ export default class AuthController {
     try {
       const { uid, name, email, picture } = req.user;
       
-      // Tìm hoặc tạo user từ Firebase data
       const user = await this.authService.findOrCreateFirebaseUser({
         uid, name, email, picture
       });
       
-      // Tạo session token cho backend
       const sessionToken = AuthUtils.genSessionToken(user);
       
       res.cookie('sessionToken', sessionToken, {
