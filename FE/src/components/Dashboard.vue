@@ -11,10 +11,11 @@
       </div>
     </div>
   </div>
-</template>
+</template> 
 
 <script>
 import axios from "axios";
+import socket from "../socket";
 
 export default {
   name: "Dashboard",
@@ -23,21 +24,41 @@ export default {
       meetingCode: "",
     };
   },
+  mounted() {
+    // Kết nối socket và đăng ký user
+    socket.connect();
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        socket.emit("register-user", { uid: user.uid });
+        console.log(`User ${user.name} registered with socket`);
+      } catch (error) {
+        console.error("Error parsing user from localStorage:", error);
+        // Không redirect vì user có thể chưa login
+      }
+    }
+  },
   methods: {
     async startNewMeeting() {
       const user = JSON.parse(localStorage.getItem("user"));
+      console.log("User before creating room:", user); // Debug
+      
       const response = await axios.post("/api/v1/room/", {
         hostUid: user.uid,
         hostName: user.name,
       });
       if (response.status === 201) {
-        localStorage.setItem("user", JSON.stringify(response.data.metadata.user));
+        // Không ghi đè user object, chỉ lưu thông tin phòng nếu cần
+        // localStorage.setItem("user", JSON.stringify(response.data.metadata.user));
+        
+        console.log("Room created successfully"); // Debug
+        console.log("User after creating room:", JSON.parse(localStorage.getItem("user"))); // Debug
+        
         this.$router.push({
-          name: "Waiting",
+          name: "Meeting",
           params: { 
-            roomName: response.data.metadata.room.roomName, 
-            roomId: response.data.metadata.room._id, 
-            uidHost: user.uid 
+            roomId: response.data.metadata.room._id
           },
         });
       }
@@ -48,11 +69,17 @@ export default {
         return;
       }
       try {
+        console.log(`Attempting to join room: ${this.meetingCode}`); // Debug
         const response = await axios.get(`/api/v1/room/${this.meetingCode}`);
+        console.log(`Room response:`, response.data); // Debug
+        
         if (response.status === 200) {
           this.$router.push({
             name: "Waiting",
-            params: { roomName: response.data.roomName, roomId: this.meetingCode },
+            params: { 
+              roomName: response.data.metadata.room.hostName + "'s Room", 
+              roomId: this.meetingCode 
+            },
           });
         } else {
           alert("Không tìm thấy phòng. Vui lòng kiểm tra lại mã phòng!");

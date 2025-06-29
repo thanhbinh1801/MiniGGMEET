@@ -10,7 +10,7 @@ class RoomRouter {
     this.roomService = new RoomService(Room);
     this.roomController = new RoomController(this.roomService);
     this.setupRoutes();
-  }
+  }   
 
   setupRoutes(){  
     this.router.get('/:id', asyncHandler(this.roomController.getRoomById));

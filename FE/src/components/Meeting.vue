@@ -11,7 +11,7 @@
 </template>
 
 <script>
-import socket from "../socket";
+import socket from "../socket"; 
 
 let peerConnection = null;
 let localStream = null;
@@ -25,7 +25,7 @@ export default {
   name: "Meeting",
   data() {
     return {
-      isMicOn: true,
+      isMicOn: true,  
       isCameraOn: true,
       remoteSocketId: null,
     };
@@ -37,43 +37,81 @@ export default {
     this.$refs.localVideo.srcObject = localStream;
 
     // Lấy user info từ localStorage
-    const user = JSON.parse(localStorage.getItem("user"));
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+      console.error("User not found in localStorage");
+      alert("Vui lòng đăng nhập lại!");
+      this.$router.push("/");
+      return;
+    }
 
-    socket.emit("join-room", {
-      roomId: this.$route.params.roomId,
-      uid: user.uid,
-      name: user.name
-    });
+    try {
+      const user = JSON.parse(userStr);
 
-    socket.on("user-joined", ({ socketId }) => {
-      this.remoteSocketId = socketId;
-      this.createPeerConnection();
-      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-      peerConnection.createOffer().then(offer => {
-        peerConnection.setLocalDescription(offer);
-        socket.emit("offer", { target: socketId, offer });
+      // Đăng ký user với server
+      socket.emit("register-user", { uid: user.uid });
+
+      socket.emit("join-room", {
+        roomId: this.$route.params.roomId,
+        uid: user.uid,
+        name: user.name
       });
-    });
 
-    socket.on("offer", async (data) => {
-      this.remoteSocketId = data.sender;
-      this.createPeerConnection();
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
-      localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
-      socket.emit("answer", { target: data.sender, answer });
-    });
+      // Lắng nghe yêu cầu tham gia phòng từ user khác
+      socket.on("user-request-join", ({ roomId, uid, name }) => {
+        console.log(`=== HOST RECEIVED JOIN REQUEST ===`);
+        console.log(`User ${name} (${uid}) wants to join room ${roomId}`);
+        console.log(`Current roomId: ${this.$route.params.roomId}`);
+        
+        const accept = window.confirm(`${name} muốn vào phòng. Chấp nhận?`);
+        
+        socket.emit("host-respond-join", {
+          roomId: roomId,
+          uid: uid,
+          accept: accept
+        });
+        
+        if (accept) {
+          console.log(`Accepted user ${name} to join room`);
+        } else {
+          console.log(`Denied user ${name} to join room`);
+        }
+      });
 
-    socket.on("answer", async (data) => {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
-    });
+      socket.on("user-joined", ({ socketId }) => {
+        this.remoteSocketId = socketId;
+        this.createPeerConnection();
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        peerConnection.createOffer().then(offer => {
+          peerConnection.setLocalDescription(offer);
+          socket.emit("offer", { target: socketId, offer });
+        });
+      });
 
-    socket.on("candidate", async (data) => {
-      if (data.candidate) {
-        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
-      }
-    });
+      socket.on("offer", async (data) => {
+        this.remoteSocketId = data.sender;
+        this.createPeerConnection();
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.emit("answer", { target: data.sender, answer });
+      });
+
+      socket.on("answer", async (data) => {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      });
+
+      socket.on("candidate", async (data) => {
+        if (data.candidate) {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        }
+      });
+    } catch (error) {
+      console.error("Error parsing user from localStorage:", error);
+      alert("Lỗi thông tin người dùng. Vui lòng đăng nhập lại!");
+      this.$router.push("/");
+    }
   },
   methods: {
     createPeerConnection() {
@@ -115,6 +153,13 @@ export default {
     }
   },
   beforeUnmount() {
+    // Xóa event listeners
+    socket.off("user-request-join");
+    socket.off("user-joined");
+    socket.off("offer");
+    socket.off("answer");
+    socket.off("candidate");
+    
     socket.disconnect();
     if (peerConnection) peerConnection.close();
   }

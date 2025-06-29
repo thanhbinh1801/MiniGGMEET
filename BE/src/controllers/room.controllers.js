@@ -56,12 +56,12 @@ export default class RoomController{
       new OK({
         message: "Join request sent",
         metadata: result
-      }).send(res);
+      }).send(res); 
     } catch (error) {
       next(error);
     }
   }
-
+ 
   acceptJoinRoom = async (req, res, next) => {
     try {
       const roomId = req.params.id;

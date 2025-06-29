@@ -9,7 +9,7 @@
   </div>
 </template>
 
-<script>
+<script> 
 import { auth } from "@/firebase/config";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import axios from "axios";
@@ -29,7 +29,16 @@ export default {
           },
         });
         alert("Login Successful!");
+        
+        console.log("Server response:", response.data); // Debug
+        console.log("User object to save:", response.data.metadata.user); // Debug
+        
         localStorage.setItem("user", JSON.stringify(response.data.metadata.user));
+        
+        // Verify saved user
+        const savedUser = localStorage.getItem("user");
+        console.log("Saved user in localStorage:", savedUser); // Debug
+        
         this.$router.push("/dashboard");
       } catch (error) {
         console.error("Error during Google login:", error);
