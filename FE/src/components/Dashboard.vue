@@ -24,8 +24,23 @@ export default {
     };
   },
   methods: {
-    startNewMeeting() {
-      alert("Chức năng tạo cuộc họp mới đang phát triển!");
+    async startNewMeeting() {
+      const user = JSON.parse(localStorage.getItem("user"));
+      const response = await axios.post("/api/v1/room/", {
+        hostUid: user.uid,
+        hostName: user.name,
+      });
+      if (response.status === 201) {
+        localStorage.setItem("user", JSON.stringify(response.data.metadata.user));
+        this.$router.push({
+          name: "Waiting",
+          params: { 
+            roomName: response.data.metadata.room.roomName, 
+            roomId: response.data.metadata.room._id, 
+            uidHost: user.uid 
+          },
+        });
+      }
     },
     async joinMeeting() {
       if (this.meetingCode.trim() === "") {

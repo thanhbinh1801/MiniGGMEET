@@ -30,3 +30,5 @@ coverage
 *.tsbuildinfo
 
 .env
+
+src/firebase/config.js

@@ -1,17 +1,19 @@
-import Vue from "vue";
-import Router from "vue-router";
-import Login from "@/views/Login.vue";
-import Dashboard from "@/views/Dashboard.vue";
-import Waiting from "@/views/Waiting.vue";
-import Meeting from "@/views/Meeting.vue";
+import { createRouter, createWebHistory } from "vue-router";
+import Login from "@/components/Login.vue";
+import Dashboard from "@/components/Dashboard.vue";
+import Waiting from "@/components/Waiting.vue";
+import Meeting from "@/components/Meeting.vue";
 
-Vue.use(Router);
+const routes = [
+  { path: "/", name: "Login", component: Login },
+  { path: "/dashboard", name: "Dashboard", component: Dashboard },
+  { path: "/waiting/:roomId", name: "Waiting", component: Waiting },
+  { path: "/meeting/:roomId", name: "Meeting", component: Meeting },
+];
 
-export default new Router({
-  routes: [
-    { path: "/", name: "Login", component: Login },
-    { path: "/dashboard", name: "Dashboard", component: Dashboard },
-    { path: "/waiting/:roomId", name: "Waiting", component: Waiting },
-    { path: "/meeting/:roomId", name: "Meeting", component: Meeting },
-  ],
+const router = createRouter({
+  history: createWebHistory(),
+  routes,
 });
+
+export default router;

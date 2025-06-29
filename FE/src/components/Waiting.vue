@@ -39,10 +39,9 @@ export default {
         alert("Không thể tham gia phòng.");
       }
     },
-  },
+  }
 };
 </script>
-
 <style scoped>
 .waiting-room-container {
   display: flex;
