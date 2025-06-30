@@ -21,7 +21,7 @@ export default class RoomService {
 
   getRoomById = async (roomId) => {
     try {
-      const room = await this.Room.findById(roomId);
+      const room = await this.Room.findOne({roomId});
       if (!room) {
         throw new NotFoundError("Room not found");
       }

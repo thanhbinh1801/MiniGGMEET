@@ -39,7 +39,6 @@ class SocketService {
           const room = await RoomModel.findOne({ roomId });
           if (!room) {
             console.log(`Room ${roomId} not found in database`);
-            console.log(`Available rooms:`, await RoomModel.find({}, { roomId: 1, hostUid: 1, hostName: 1 }));
             return;
           }
           console.log(`Found room:`, room);
@@ -62,12 +61,12 @@ class SocketService {
       });
 
       // Debug: Log tất cả events
-      socket.onAny((eventName, ...args) => {
-        console.log(`=== SOCKET EVENT RECEIVED ===`);
-        console.log(`Event: ${eventName}`);
-        console.log(`Args:`, args);
-      });
-
+      
+      // socket.onAny((eventName, ...args) => {
+      //   console.log(`=== SOCKET EVENT RECEIVED ===`);
+      //   console.log(`Event: ${eventName}`);
+      //   console.log(`Args:`, args);
+      // });
       // Host phản hồi
       socket.on('host-respond-join', ({ roomId, uid, accept }) => {
         const userSocketId = this.userIdToSocketId.get(uid);

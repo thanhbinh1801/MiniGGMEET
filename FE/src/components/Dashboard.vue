@@ -16,6 +16,7 @@
 <script>
 import axios from "axios";
 import socket from "../socket";
+import generateMeetingId from "../utils/genMeetingId.js";
 
 export default {
   name: "Dashboard",
@@ -42,12 +43,15 @@ export default {
   methods: {
     async startNewMeeting() {
       const user = JSON.parse(localStorage.getItem("user"));
-      console.log("User before creating room:", user); // Debug
+
+      const IdRoom = generateMeetingId();
       
       const response = await axios.post("/api/v1/room/", {
+        roomId: IdRoom,
         hostUid: user.uid,
         hostName: user.name,
       });
+
       if (response.status === 201) {
         // Không ghi đè user object, chỉ lưu thông tin phòng nếu cần
         // localStorage.setItem("user", JSON.stringify(response.data.metadata.user));
@@ -58,7 +62,7 @@ export default {
         this.$router.push({
           name: "Meeting",
           params: { 
-            roomId: response.data.metadata.room._id
+            roomId: response.data.metadata.room.roomId,
           },
         });
       }

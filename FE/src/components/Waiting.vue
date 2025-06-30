@@ -58,14 +58,14 @@ export default {
       console.log("User registered with socket, waiting for connection...");
       
       // Đợi socket kết nối trước khi gửi request
-      if (socket.connected) {
-        this.autoJoinRoom(user);
-      } else {
-        socket.on('connect', () => {
-          console.log("Socket connected, now sending join request");
-          this.autoJoinRoom(user);
-        });
-      }
+      // if (socket.connected) {
+      //   this.autoJoinRoom(user);
+      // } else {
+      //   socket.on('connect', () => {
+      //     console.log("Socket connected, now sending join request");
+      //     this.autoJoinRoom(user);
+      //   });
+      // }
       
       // Test socket connection
       setTimeout(() => {
@@ -100,36 +100,36 @@ export default {
     }
   },
   methods: {
-    autoJoinRoom(user) {
-      const roomId = this.$route.params.roomId;
+    // autoJoinRoom(user) {
+    //   const roomId = this.$route.params.roomId;
       
-      this.isWaitingForResponse = true;
+    //   this.isWaitingForResponse = true;
       
-      console.log(`Socket connected: ${socket.connected}`);
-      console.log(`Socket id: ${socket.id}`);
-      console.log(`Room ID from route: ${roomId}`);
-      console.log(`User UID: ${user.uid}`);
-      console.log(`User name: ${user.name}`);
+    //   console.log(`Socket connected: ${socket.connected}`);
+    //   console.log(`Socket id: ${socket.id}`);
+    //   console.log(`Room ID from route: ${roomId}`);
+    //   console.log(`User UID: ${user.uid}`);
+    //   console.log(`User name: ${user.name}`);
       
-      // Gửi yêu cầu tham gia phòng
-      const requestData = {
-        roomId: roomId,
-        uid: user.uid,
-        name: user.name
-      };
+    //   // Gửi yêu cầu tham gia phòng
+    //   const requestData = {
+    //     roomId: roomId,
+    //     uid: user.uid,
+    //     name: user.name
+    //   };
       
-      console.log(`Sending request-join-room with data:`, requestData);
+    //   console.log(`Sending request-join-room with data:`, requestData);
       
-      socket.emit("request-join-room", requestData);
+    //   socket.emit("request-join-room", requestData);
       
-      console.log(`Auto requesting to join room ${roomId}`);
+    //   console.log(`Auto requesting to join room ${roomId}`);
       
-      // Kiểm tra xem event có được gửi không
-      setTimeout(() => {
-        console.log(`Socket connected after 1s: ${socket.connected}`);
-        console.log(`Socket id after 1s: ${socket.id}`);
-      }, 1000);
-    },
+    //   // Kiểm tra xem event có được gửi không
+    //   setTimeout(() => {
+    //     console.log(`Socket connected after 1s: ${socket.connected}`);
+    //     console.log(`Socket id after 1s: ${socket.id}`);
+    //   }, 1000);
+    // },
     joinNow() {
       if (this.isWaitingForResponse) {
         alert("Đang chờ phản hồi từ chủ phòng...");

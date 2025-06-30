@@ -7,6 +7,7 @@ export default class RoomController{
   createRoom = async (req, res, next) => {
     try {
       const roomData = req.body;
+      console.log("Creating room with data:", roomData);
       const room = await this.RoomService.createRoom(roomData);
       new CREATED({
         message: "Room created successfully",
@@ -19,7 +20,7 @@ export default class RoomController{
 
   getRoomById = async (req, res, next) => {
     try {
-      const roomId = req.params.id;
+      const roomId = req.params.id; 
       const room = await this.RoomService.getRoomById(roomId);
       if (!room) {
         return res.status(404).json({ message: "Room not found" });
