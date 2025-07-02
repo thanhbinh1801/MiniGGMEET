@@ -12,7 +12,7 @@
           v-show="showPreview"
         ></video>
         <div v-if="!showPreview" class="video-placeholder">
-          <div class="placeholder-icon">📹</div>
+          <div class="placeholder-icon">Video</div>
           <p class="placeholder-text">Camera đang tắt</p>
         </div>
         <div class="video-controls">
@@ -21,14 +21,14 @@
             :class="{ active: isCameraOn, inactive: !isCameraOn }"
             class="control-btn"
           >
-            {{ isCameraOn ? "📹" : "📹" }}
+            <span v-if="isCameraOn">Camera</span><span v-else>Tắt cam</span>
           </button>
           <button 
             @click="togglePreviewMic" 
             :class="{ active: isMicOn, inactive: !isMicOn }"
             class="control-btn"
           >
-            {{ isMicOn ? "🎤" : "🎤" }}
+            <span v-if="isMicOn">Mic</span><span v-else>Tắt mic</span>
           </button>
         </div>
       </div>
@@ -38,28 +38,12 @@
     <div class="meeting-info">
       <h2 class="meeting-title">{{ roomName }}</h2>
       <div class="room-id">Room ID: {{ $route.params.roomId }}</div>
-      
-      <!-- Status Display -->
       <div class="status-section">
         <div v-if="connectionStatus" class="status-item">
           <span class="status-icon" :class="getStatusClass(connectionStatus)">●</span>
           <span class="status-text">{{ getStatusText(connectionStatus) }}</span>
         </div>
-        
-        <div v-if="isWaitingForResponse" class="waiting-status">
-          <div class="loading-dots">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
-          <p>Đang chờ phản hồi từ chủ phòng...</p>
-          <p class="retry-info" v-if="retryCount > 0">
-            Thử lại: {{ retryCount }}/{{ maxRetries }}
-          </p>
-        </div>
       </div>
-
-      <!-- Action Button -->
       <button 
         class="join-button" 
         @click="requestJoinRoom"
@@ -69,25 +53,13 @@
           disabled: connectionStatus !== 'connected'
         }"
       >
-        <span v-if="isWaitingForResponse" class="button-spinner">⏳</span>
+        <span v-if="isWaitingForResponse" class="button-spinner">...</span>
         {{ getButtonText() }}
       </button>
-
-      <!-- Error Message -->
       <div v-if="errorMessage" class="error-message">
         <p>{{ errorMessage }}</p>
         <button @click="clearError" class="clear-error-btn">✕</button>
       </div>
-    </div>
-
-    <!-- Debug Info (Development) -->
-    <div v-if="showDebug" class="debug-info">
-      <h4>Debug Info:</h4>
-      <div class="debug-item">Socket ID: {{ socketId }}</div>
-      <div class="debug-item">User ID: {{ user?.uid }}</div>
-      <div class="debug-item">Connection: {{ connectionStatus }}</div>
-      <div class="debug-item">Waiting: {{ isWaitingForResponse }}</div>
-      <div class="debug-item">Retries: {{ retryCount }}/{{ maxRetries }}</div>
     </div>
   </div>
 </template>
@@ -114,11 +86,6 @@ export default {
       socketId: null,
       isWaitingForResponse: false,
       
-      // Retry Logic
-      retryCount: 0,
-      maxRetries: 3,
-      requestTimeoutId: null,
-      
       // Media Preview
       previewStream: null,
       isCameraOn: true,
@@ -127,7 +94,6 @@ export default {
       
       // UI States
       errorMessage: '',
-      showDebug: process.env.NODE_ENV === 'development',
       
       // Event Handlers
       boundHandlers: {}
@@ -299,7 +265,6 @@ export default {
       console.log(`Requesting to join room ${this.roomId}...`);
       
       this.isWaitingForResponse = true;
-      this.retryCount = 0;
       this.clearError();
       
       await this.sendJoinRequest();
@@ -360,21 +325,8 @@ export default {
         this.requestTimeoutId = null;
       }
       
-      this.retryCount++;
-      
-      if (this.retryCount <= this.maxRetries) {
-        console.log(`Retrying in 3 seconds... (${this.retryCount}/${this.maxRetries})`);
-        
-        setTimeout(() => {
-          if (this.isWaitingForResponse) {
-            this.sendJoinRequest();
-          }
-        }, 3000);
-      } else {
-        console.log("Max retries reached, stopping attempts");
-        this.isWaitingForResponse = false;
-        this.setError(error.message || "Không thể tham gia phòng. Vui lòng thử lại sau.");
-      }
+      this.isWaitingForResponse = false;
+      this.setError(error.message || "Không thể tham gia phòng. Vui lòng thử lại sau.");
     },
 
     // Socket Event Handlers
@@ -550,7 +502,6 @@ export default {
       // Reset state
       this.isWaitingForResponse = false;
       this.connectionStatus = 'disconnected';
-      this.retryCount = 0;
     }
   },
 
@@ -566,8 +517,10 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  justify-content: center;
   min-height: 100vh;
+  width: 100vw;
+  padding: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #333;
 }
@@ -824,29 +777,6 @@ export default {
   justify-content: center;
 }
 
-.debug-info {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(0,0,0,0.8);
-  color: white;
-  padding: 16px;
-  border-radius: 8px;
-  font-size: 12px;
-  min-width: 200px;
-}
-
-.debug-info h4 {
-  margin: 0 0 8px 0;
-  font-size: 14px;
-}
-
-.debug-item {
-  margin: 4px 0;
-  display: flex;
-  justify-content: space-between;
-}
-
 /* Animations */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
@@ -887,13 +817,6 @@ export default {
     padding: 14px 28px;
     font-size: 15px;
     min-width: 180px;
-  }
-  
-  .debug-info {
-    position: relative;
-    margin-top: 20px;
-    right: auto;
-    bottom: auto;
   }
 }
 

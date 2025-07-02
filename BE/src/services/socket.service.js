@@ -163,6 +163,11 @@ class SocketService {
         });
       });
 
+      socket.on('toggle-camera', ({ roomId, uid, isCameraOn }) => {
+        // Broadcast cho các client khác trong phòng
+        socket.to(roomId).emit('toggle-camera', { uid, isCameraOn });
+      });
+
       socket.on('disconnect', async () => {
         console.log(`User disconnected: ${socket.id}`);
         const user = this.users.get(socket.id);

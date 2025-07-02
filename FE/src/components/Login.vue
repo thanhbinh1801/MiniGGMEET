@@ -1,16 +1,6 @@
 <template>
   <div class="login-container">
-    <!-- Background decoration -->
-    <div class="background-decoration">
-      <div class="floating-shape shape-1"></div>
-      <div class="floating-shape shape-2"></div>
-      <div class="floating-shape shape-3"></div>
-      <div class="floating-shape shape-4"></div>
-    </div>
-
-    <!-- Login card -->
     <div class="login-card">
-      <!-- Header -->
       <div class="login-header">
         <div class="logo-section">
           <div class="logo">
@@ -20,12 +10,7 @@
           </div>
           <h1 class="app-title">MiniGGMEET</h1>
         </div>
-        <p class="welcome-text">Chào mừng bạn đến với</p>
-        <h2 class="main-title">Nền tảng họp video</h2>
-        <p class="subtitle">Đăng nhập để bắt đầu cuộc họp của bạn</p>
       </div>
-
-      <!-- Login form -->
       <div class="login-form">
         <button class="google-signin-button" @click="signInWithGoogle" :disabled="isLoading">
           <div class="button-content">
@@ -43,57 +28,7 @@
             <div class="spinner"></div>
           </div>
         </button>
-
-        <div class="divider">
-          <span class="divider-text">hoặc</span>
-        </div>
-
-        <div class="alternative-options">
-          <p class="help-text">
-            Bạn cần hỗ trợ? 
-            <a href="#" class="help-link">Liên hệ với chúng tôi</a>
-          </p>
-        </div>
       </div>
-
-      <!-- Features -->
-      <div class="features-section">
-        <div class="feature-item">
-          <div class="feature-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" fill="#34a853"/>
-              <path d="M10 17l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" fill="white"/>
-            </svg>
-          </div>
-          <span>Bảo mật tuyệt đối</span>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="#1a73e8"/>
-              <path d="M13 7h-2v5l4.25 2.52.77-1.28L13 11.25V7z" fill="white"/>
-            </svg>
-          </div>
-          <span>Sẵn sàng 24/7</span>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="#fbbc04"/>
-            </svg>
-          </div>
-          <span>Chất lượng cao</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <div class="login-footer">
-      <p class="footer-text">
-        Bằng cách đăng nhập, bạn đồng ý với 
-        <a href="#" class="footer-link">Điều khoản dịch vụ</a> và 
-        <a href="#" class="footer-link">Chính sách bảo mật</a>
-      </p>
     </div>
   </div>
 </template>
@@ -155,9 +90,6 @@ export default {
       notification.className = 'success-notification';
       notification.innerHTML = `
         <div class="notification-content">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" fill="#34a853"/>
-          </svg>
           <span>Đăng nhập thành công!</span>
         </div>
       `;
@@ -173,9 +105,6 @@ export default {
       notification.className = 'error-notification';
       notification.innerHTML = `
         <div class="notification-content">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="#ea4335"/>
-          </svg>
           <span>Đăng nhập thất bại. Vui lòng thử lại!</span>
         </div>
       `;
@@ -190,402 +119,127 @@ export default {
 </script>
 
 <style scoped>
-* {
-  box-sizing: border-box;
+html, body {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
 }
-
 .login-container {
-  min-height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4285f4 0%, #6a11cb 100%);
   font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  position: relative;
-  overflow: hidden;
-  padding: 20px;
+  margin: 0;
+  padding: 0;
+  z-index: 1;
 }
-
-/* Background Animation */
-.background-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.floating-shape {
-  position: absolute;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  animation: float 6s ease-in-out infinite;
-}
-
-.shape-1 {
-  width: 80px;
-  height: 80px;
-  top: 20%;
-  left: 10%;
-  animation-delay: 0s;
-}
-
-.shape-2 {
-  width: 120px;
-  height: 120px;
-  top: 60%;
-  right: 10%;
-  animation-delay: 2s;
-}
-
-.shape-3 {
-  width: 60px;
-  height: 60px;
-  bottom: 20%;
-  left: 20%;
-  animation-delay: 4s;
-}
-
-.shape-4 {
-  width: 100px;
-  height: 100px;
-  top: 10%;
-  right: 30%;
-  animation-delay: 1s;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(180deg);
-  }
-}
-
-/* Login Card */
 .login-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 48px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  max-width: 480px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 40px 32px 32px 32px;
+  box-shadow: 0 8px 32px rgba(60,64,67,0.18);
+  max-width: 350px;
   width: 100%;
   text-align: center;
   position: relative;
   z-index: 10;
+  margin: 0 auto;
 }
-
-/* Header */
 .login-header {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
 }
-
 .logo-section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 24px;
+  gap: 10px;
 }
-
 .logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #1a73e8, #4285f4);
-  border-radius: 16px;
-  box-shadow: 0 8px 16px rgba(26, 115, 232, 0.3);
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4285f4, #6a11cb);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(66,133,244,0.10);
 }
-
 .app-title {
-  font-size: 28px;
+  font-size: 20px;
   font-weight: 600;
-  color: #1a73e8;
+  color: #4285f4;
   margin: 0;
 }
-
-.welcome-text {
-  font-size: 16px;
-  color: #5f6368;
-  margin: 0 0 8px 0;
-}
-
-.main-title {
-  font-size: 32px;
-  font-weight: 400;
-  color: #202124;
-  margin: 0 0 16px 0;
-  background: linear-gradient(135deg, #1a73e8, #4285f4);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.subtitle {
-  font-size: 16px;
-  color: #5f6368;
-  margin: 0;
-  line-height: 1.4;
-}
-
-/* Login Form */
 .login-form {
-  margin-bottom: 32px;
+  margin-bottom: 0;
 }
-
 .google-signin-button {
   width: 100%;
-  background: white;
-  border: 2px solid #dadce0;
-  border-radius: 12px;
-  padding: 16px 24px;
+  background: #fff;
+  border: 1.5px solid #dadce0;
+  border-radius: 24px;
+  padding: 14px 0;
   font-size: 16px;
   font-weight: 500;
   color: #3c4043;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: box-shadow 0.2s, border-color 0.2s;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 4px rgba(60,64,67,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
-
 .google-signin-button:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #1a73e8;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-2px);
+  border-color: #4285f4;
+  box-shadow: 0 4px 12px rgba(66,133,244,0.15);
 }
-
 .google-signin-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
-
 .button-content {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
 }
-
-.google-icon {
-  flex-shrink: 0;
-}
-
 .button-text {
   font-weight: 500;
 }
-
 .loading-spinner {
   position: absolute;
   top: 50%;
   right: 20px;
   transform: translateY(-50%);
 }
-
 .spinner {
   width: 20px;
   height: 20px;
   border: 2px solid #f3f3f3;
-  border-top: 2px solid #1a73e8;
+  border-top: 2px solid #4285f4;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
-
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-.divider {
-  margin: 32px 0;
-  position: relative;
-}
-
-.divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: #dadce0;
-}
-
-.divider-text {
-  background: white;
-  padding: 0 16px;
-  color: #5f6368;
-  font-size: 14px;
-  position: relative;
-  z-index: 1;
-}
-
-.alternative-options {
-  margin-top: 24px;
-}
-
-.help-text {
-  font-size: 14px;
-  color: #5f6368;
-  margin: 0;
-}
-
-.help-link {
-  color: #1a73e8;
-  text-decoration: none;
-  font-weight: 500;
-  transition: color 0.2s ease;
-}
-
-.help-link:hover {
-  color: #1557b0;
-  text-decoration: underline;
-}
-
-/* Features */
-.features-section {
-  display: flex;
-  justify-content: space-around;
-  gap: 24px;
-  padding-top: 32px;
-  border-top: 1px solid #e8eaed;
-}
-
-.feature-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  text-align: center;
-}
-
-.feature-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8f9fa;
-  border: 2px solid #e8eaed;
-}
-
-.feature-item span {
-  font-size: 12px;
-  color: #5f6368;
-  font-weight: 500;
-}
-
-/* Footer */
-.login-footer {
-  margin-top: 32px;
-  text-align: center;
-}
-
-.footer-text {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.footer-link {
-  color: rgba(255, 255, 255, 0.9);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.footer-link:hover {
-  text-decoration: underline;
-}
-
-/* Notifications */
-:global(.success-notification),
-:global(.error-notification) {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: white;
-  border-radius: 12px;
-  padding: 16px 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  animation: slideIn 0.3s ease-out;
-}
-
-:global(.success-notification) {
-  border-left: 4px solid #34a853;
-}
-
-:global(.error-notification) {
-  border-left: 4px solid #ea4335;
-}
-
-:global(.notification-content) {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 500;
-  color: #202124;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .login-card {
-    padding: 32px 24px;
-    margin: 20px;
+    padding: 20px 6px 16px 6px;
+    max-width: 98vw;
   }
-  
-  .main-title {
-    font-size: 28px;
-  }
-  
-  .features-section {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .feature-item {
-    flex-direction: row;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .login-card {
-    padding: 24px 20px;
-  }
-  
   .app-title {
-    font-size: 24px;
-  }
-  
-  .main-title {
-    font-size: 24px;
-  }
-  
-  .floating-shape {
-    display: none;
+    font-size: 16px;
   }
 }
 </style>

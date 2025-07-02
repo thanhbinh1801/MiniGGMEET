@@ -2,8 +2,15 @@
   <div class="meeting-container">
     <div class="video-section">
       <div class="video-wrapper">
-        <video ref="localVideo" autoplay playsinline muted class="video-item local-video"></video>
-        <div class="video-label">Bạn</div>
+        <template v-if="isCameraOn && localStream">
+          <video ref="localVideo" autoplay playsinline muted class="video-item local-video"></video>
+        </template>
+        <template v-else>
+          <div class="avatar-placeholder">
+            <i class="fas fa-user-circle"></i>
+          </div>
+        </template>
+        <div class="video-label">{{ user?.name || 'Bạn' }}</div>
       </div>
       
       <!-- Hiển thị tất cả remote videos -->
@@ -12,26 +19,48 @@
         :key="socketId"
         class="video-wrapper"
       >
-        <video 
-          :ref="`remoteVideo_${socketId}`"
-          autoplay 
-          playsinline 
-          class="video-item remote-video"
-        ></video>
+        <template v-if="participant.isCameraOn">
+          <video 
+            :ref="`remoteVideo_${socketId}`"
+            autoplay 
+            playsinline 
+            class="video-item remote-video"
+          ></video>
+        </template>
+        <template v-else>
+          <div class="avatar-placeholder">
+            <i class="fa-solid fa-user"></i>
+          </div>
+        </template>
         <div class="video-label">{{ participant.name }}</div>
       </div>
     </div>
     
+    <!-- Control Bar -->
     <div class="control-bar">
-      <button @click="toggleMic" :class="{ active: isMicOn, inactive: !isMicOn }" class="control-btn">
-        {{ isMicOn ? "🎤 Mic On" : "🎤 Mic Off" }}
+      <button @click="toggleMic" :class="{ active: isMicOn, inactive: !isMicOn }" class="control-btn" :title="isMicOn ? 'Tắt mic' : 'Bật mic'">
+        <i :class="isMicOn ? 'fa-solid fa-microphone' : 'fa-solid fa-microphone-slash'"></i>
       </button>
-      <button @click="toggleCamera" :class="{ active: isCameraOn, inactive: !isCameraOn }" class="control-btn">
-        {{ isCameraOn ? "📹 Camera On" : "📹 Camera Off" }}
+      <button @click="toggleCamera" :class="{ active: isCameraOn, inactive: !isCameraOn }" class="control-btn" :title="isCameraOn ? 'Tắt camera' : 'Bật camera'">
+        <i :class="isCameraOn ? 'fa-solid fa-camera' : 'fa-solid fa-camera-slash'"></i>
       </button>
-      <button @click="leaveMeeting" class="leave-button">🚪 Rời phòng</button>
+      <button @click="leaveMeeting" class="leave-button" title="Rời phòng">
+        <i class="fa-solid fa-phone-slash"></i>
+      </button>
     </div>
     
+    <!-- Room Info Bottom Left -->
+    <div class="room-info">
+      <div class="room-id">{{ currentTime }} | <b>{{ roomId }}</b></div>
+    </div>
+
+    <!-- Join Popup -->
+    <transition name="fade">
+      <div v-if="showJoinPopup" class="join-popup">
+        <span><b>{{ joinPopupName }}</b> đã tham gia phòng</span>
+      </div>
+    </transition>
+
     <!-- Join Requests Section -->
     <div v-if="joinRequests.length > 0" class="requests-section">
       <h3>Yêu cầu tham gia phòng</h3>
@@ -41,8 +70,8 @@
           <p class="room-id">Room: {{ request.roomId }}</p>
         </div>
         <div class="request-actions">
-          <button @click="respondToJoin(request, true)" class="accept-btn">✅ Chấp nhận</button>
-          <button @click="respondToJoin(request, false)" class="deny-btn">❌ Từ chối</button>
+          <button @click="respondToJoin(request, true)" class="accept-btn">Chấp nhận</button>
+          <button @click="respondToJoin(request, false)" class="deny-btn">Từ chối</button>
         </div>
       </div>
     </div>
@@ -81,7 +110,10 @@ export default {
       peerConnections: new Map(),
       remoteStreams: new Map(),
       showDebug: false,
-      debugInfo: {}
+      debugInfo: {},
+      showJoinPopup: false,
+      joinPopupName: '',
+      currentTime: '',
     };
   },
   async mounted() {
@@ -93,6 +125,28 @@ export default {
       console.error("Error in meeting setup:", error);
       alert("Lỗi khi khởi tạo phòng meeting. Vui lòng thử lại!");
       this.$router.push("/dashboard");
+    }
+
+    this.updateTime();
+    this.timeInterval = setInterval(this.updateTime, 1000);
+  },
+  watch: {
+    isCameraOn(newVal) {
+      if (newVal && this.localStream) {
+        this.$nextTick(() => {
+          if (this.$refs.localVideo) {
+            this.$refs.localVideo.srcObject = this.localStream;
+          }
+        });
+      }
+      socket.emit('toggle-camera', { roomId: this.roomId, uid: this.user.uid, isCameraOn: newVal });
+    },
+    localStream(newStream) {
+      this.$nextTick(() => {
+        if (this.$refs.localVideo && newStream) {
+          this.$refs.localVideo.srcObject = newStream;
+        }
+      });
     }
   },
   methods: {
@@ -146,8 +200,13 @@ export default {
             autoGainControl: true
           }
         });
-        
-        this.$refs.localVideo.srcObject = this.localStream;
+
+        // Đảm bảo ref đã render xong
+        this.$nextTick(() => {
+          if (this.$refs.localVideo) {
+            this.$refs.localVideo.srcObject = this.localStream;
+          }
+        });
         console.log("Local stream initialized successfully");
       } catch (error) {
         console.error("Error accessing media devices:", error);
@@ -177,12 +236,13 @@ export default {
       socket.on("room-updated", this.handleRoomUpdated);
       socket.on("user-request-join", this.handleJoinRequest);
       socket.on("user-left", this.handleUserLeft);
+      socket.on("toggle-camera", this.handleToggleCamera);
     },
 
     async handleRoomMembers(members) {
       for (const member of members) {
-        this.remoteParticipants[member.socketId] = { uid: member.uid, name: member.name };
-        // Không tạo offer, chỉ setup peer connection (chờ offer từ họ)
+        // Mặc định isCameraOn = true khi join
+        this.remoteParticipants[member.socketId] = { uid: member.uid, name: member.name, isCameraOn: true };
         await this.setupPeerConnection(member.socketId, false);
       }
     },
@@ -210,7 +270,7 @@ export default {
       }
       console.log(`User ${name} (${uid}) joined with socket ${socketId}`);
       // Vue 3: gán trực tiếp
-      this.remoteParticipants[socketId] = { uid, name };  
+      this.remoteParticipants[socketId] = { uid, name, isCameraOn: true };  
       // Đảm bảo cả host và client đều tạo peer connection,
       // chỉ phía có socket.id lớn hơn tạo offer để tránh double-offer
       const isInitiator = socket.id > socketId;
@@ -233,6 +293,10 @@ export default {
           console.error(`Error creating offer for ${socketId}:`, error);
         }
       }
+
+      this.showJoinPopup = true;
+      this.joinPopupName = name;
+      setTimeout(() => { this.showJoinPopup = false; }, 2500);
     },
 
     async handleOffer({ sender, offer }) {
@@ -452,6 +516,10 @@ this.$nextTick(() => {
           track.enabled = this.isCameraOn;
         });
       }
+      // Gán lại srcObject khi bật lại camera
+      if (this.isCameraOn && this.$refs.localVideo) {
+        this.$refs.localVideo.srcObject = this.localStream;
+      }
       console.log(`Camera ${this.isCameraOn ? 'enabled' : 'disabled'}`);
     },
 
@@ -493,7 +561,23 @@ this.$nextTick(() => {
       
       // Chuyển về dashboard
       this.$router.push("/dashboard");
-    }
+    },
+
+    updateTime() {
+      const now = new Date();
+      const h = now.getHours().toString().padStart(2, '0');
+      const m = now.getMinutes().toString().padStart(2, '0');
+      this.currentTime = `${h}:${m}`;
+    },
+
+    handleToggleCamera({ uid, isCameraOn }) {
+      // Tìm participant theo uid và cập nhật trạng thái camera
+      for (const [socketId, participant] of Object.entries(this.remoteParticipants)) {
+        if (participant.uid === uid) {
+          this.remoteParticipants[socketId].isCameraOn = isCameraOn;
+        }
+      }
+    },
   },
   beforeUnmount() {
     console.log("Meeting component unmounting");
@@ -507,6 +591,9 @@ this.$nextTick(() => {
     socket.off("room-updated", this.handleRoomUpdated);
     socket.off("user-request-join", this.handleJoinRequest);
     socket.off("user-left", this.handleUserLeft);
+    socket.off("toggle-camera", this.handleToggleCamera);
+
+    clearInterval(this.timeInterval);
   }
 };
 </script>
@@ -516,153 +603,231 @@ this.$nextTick(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
+  justify-content: center;
   min-height: 100vh;
-  background: #f5f5f5;
+  min-width: 100vw;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  position: relative;
+  padding: 0;
+  overflow: hidden;
 }
 
 .video-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
-  max-width: 1200px;
-  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 24px;
+  width: 100vw;
+  min-height: 80vh;
+  margin-top: 24px;
 }
 
 .video-wrapper {
+  flex: 1 1 320px;
+  max-width: 480px;
+  min-width: 220px;
+  aspect-ratio: 4/3;
+  margin: 8px;
   position: relative;
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background: #222;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .video-item {
   width: 100%;
-  height: 250px;
-  background: #222;
+  height: 100%;
   object-fit: cover;
+  background: #222;
   display: block;
-}
-
-.local-video {
-  border: 3px solid #007bff;
-}
-
-.remote-video {
-  border: 3px solid #28a745;
 }
 
 .video-label {
   position: absolute;
-  bottom: 10px;
-  left: 10px;
+  left: 16px;
+  bottom: 16px;
   background: rgba(0,0,0,0.7);
-  color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 12px;
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 8px;
+  font-size: 15px;
   font-weight: 500;
+  pointer-events: none;
+}
+
+.avatar-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #3a2352;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-size: 110px;
+  color: #bdbdbd;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
 }
 
 .control-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 32px;
+  transform: translateX(-50%);
   display: flex;
-  gap: 15px;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
-  justify-content: center;
+  gap: 18px;
+  background: rgba(24,24,24,0.95);
+  border-radius: 32px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+  padding: 10px 32px;
+  z-index: 10;
 }
 
 .control-btn {
-  padding: 12px 24px;
+  width: 56px;
+  height: 56px;
   border: none;
-  border-radius: 25px;
+  border-radius: 50%;
+  font-size: 24px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #232323;
+  color: #fff;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
 }
 
 .control-btn.active {
   background: #28a745;
-  color: white;
+  color: #fff;
 }
 
 .control-btn.inactive {
   background: #dc3545;
-  color: white;
+  color: #fff;
+}
+
+.control-btn:hover {
+  background: #444;
 }
 
 .leave-button {
   background: #dc3545;
-  color: white;
+  color: #fff;
   border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.3s ease;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 8px;
+  transition: background 0.2s;
 }
 
 .leave-button:hover {
-  background: #c82333;
+  background: #b71c1c;
+}
+
+.room-info {
+  position: fixed;
+  left: 32px;
+  bottom: 24px;
+  color: #fff;
+  font-size: 16px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.room-id {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  opacity: 0.95;
 }
 
 .requests-section {
-  background: white;
-  border-radius: 10px;
-  padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  max-width: 600px;
+  position: fixed;
+  right: 32px;
+  bottom: 32px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 18px 14px 18px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  max-width: 320px;
   width: 100%;
-  margin-bottom: 20px;
+  min-width: 220px;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 200;
 }
 
 .requests-section h3 {
   margin-top: 0;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   color: #333;
   text-align: center;
+  font-size: 22px;
+  font-weight: 600;
 }
 
 .request-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 18px 16px 14px 16px;
   background: #f8f9fa;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  border-left: 4px solid #007bff;
+  border-radius: 12px;
+  margin-bottom: 12px;
+  border-left: 4px solid #1a73e8;
+  width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 2px 8px rgba(26,115,232,0.06);
 }
 
 .request-info p {
-  margin: 0;
-  margin-bottom: 5px;
+  margin: 0 0 6px 0;
+  font-size: 16px;
+  color: #222;
 }
 
 .room-id {
-  font-size: 12px;
+  font-size: 13px;
   color: #666;
+  margin-top: 2px;
 }
 
 .request-actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .accept-btn {
   background: #28a745;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
+  padding: 8px 20px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.3s;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 8px rgba(40,167,69,0.08);
 }
-
 .accept-btn:hover {
   background: #218838;
 }
@@ -671,13 +836,14 @@ this.$nextTick(() => {
   background: #dc3545;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 5px;
+  padding: 8px 20px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.3s;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  box-shadow: 0 2px 8px rgba(220,53,69,0.08);
 }
-
 .deny-btn:hover {
   background: #c82333;
 }
@@ -737,5 +903,28 @@ this.$nextTick(() => {
     position: relative;
     margin-top: 20px;
   }
+}
+
+.join-popup {
+  position: fixed;
+  left: 32px;
+  bottom: 100px;
+  background: rgba(40, 167, 69, 0.95);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  z-index: 100;
+  min-width: 0;
+  max-width: 320px;
+  text-align: left;
+  animation: fadeInUp 0.3s;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 </style>
