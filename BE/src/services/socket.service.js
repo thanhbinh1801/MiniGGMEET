@@ -113,22 +113,26 @@ class SocketService {
       // WebRTC Signaling với timeout 5s
       socket.on('offer', (data, callback) => {
         this.io.to(data.target).timeout(5000).emit('offer', data, (err) => {
-          if (err) {
-            console.error('Offer failed:', err);
-            callback({ success: false });
-          } else {
-            callback({ success: true });
+          if (typeof callback === 'function') {
+            if (err) {
+              console.error('Offer failed:', err);
+              callback({ success: false });
+            } else {
+              callback({ success: true });
+            }
           }
         });
       });
 
       socket.on('answer', (data, callback) => {
         this.io.to(data.target).timeout(5000).emit('answer', data, (err) => {
-          if (err) {
-            console.error('Answer failed:', err);
-            callback({ success: false });
-          } else {
-            callback({ success: true });
+          if (typeof callback === 'function') {
+            if (err) {
+              console.error('Answer failed:', err);
+              callback({ success: false });
+            } else {
+              callback({ success: true });
+            }
           }
         });
       });

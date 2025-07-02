@@ -210,7 +210,7 @@ export default {
       }
       console.log(`User ${name} (${uid}) joined with socket ${socketId}`);
       // Vue 3: gán trực tiếp
-      this.remoteParticipants[socketId] = { uid, name };
+      this.remoteParticipants[socketId] = { uid, name };  
       // Đảm bảo cả host và client đều tạo peer connection,
       // chỉ phía có socket.id lớn hơn tạo offer để tránh double-offer
       const isInitiator = socket.id > socketId;
@@ -332,15 +332,28 @@ export default {
           console.log(`Added ${event.track.kind} track to remote stream`);
         }
         // Update video element in next tick
-        this.$nextTick(() => {
-          const videoRef = this.$refs[`remoteVideo_${socketId}`];
-          if (videoRef && videoRef.length > 0) {
-            videoRef[0].srcObject = remoteStream;
-            console.log(`Set remote stream for ${socketId}`);
-          }
-        });
+       const trySetVideo = (refName, stream, attempts = 10) => {
+  const video = this.$refs[refName];
+  if (!video) {
+    if (attempts > 0) {
+      setTimeout(() => trySetVideo(refName, stream, attempts - 1), 100);
+    }
+    return;
+  }
+  
+  const el = Array.isArray(video) ? video[0] : video;
+  if (el instanceof HTMLVideoElement) {
+    el.srcObject = stream;
+    console.log(`✅ Set srcObject for ${refName}`);
+  }
+};
+
+this.$nextTick(() => {
+  trySetVideo(`remoteVideo_${socketId}`, remoteStream);
+});
+
       };
-      // Connection state changes
+      // Connection state changes       
       pc.onconnectionstatechange = () => {
         this.connectionState = pc.connectionState;
         console.log(`Connection state with ${socketId}:`, pc.connectionState);
