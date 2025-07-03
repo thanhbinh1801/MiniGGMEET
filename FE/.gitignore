@@ -32,3 +32,5 @@ coverage
 .env
 
 src/firebase/config.js
+
+config.js

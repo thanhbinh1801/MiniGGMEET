@@ -421,7 +421,7 @@ async handleRoomMembers(members) {
   const el = Array.isArray(video) ? video[0] : video;
   if (el instanceof HTMLVideoElement) {
     el.srcObject = stream;
-    console.log(`✅ Set srcObject for ${refName}`);
+    console.log(`Set srcObject for ${refName}`);
   }
 };
 
