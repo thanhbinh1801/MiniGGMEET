@@ -114,20 +114,21 @@ export default {
 <style scoped>
 .dashboard-root {
   min-height: 100vh;
-  width: 100vw;
+  min-width: 100vw;
   background: #fff;
   font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
 .dashboard-center {
-  width: 100vw;
-  height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 700px;
 }
 .dashboard-header {
   width: 100%;
@@ -291,4 +292,168 @@ export default {
     min-width: 60px;
   }
 }
+</style>
+
+<style>
+html, body {
+  background: #fff !important;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  min-width: 100vw;
+}
+
+
+
+
+
+
+
+
+.dashboard-root {
+  height: 100vh;
+  width: 100vw;
+  background: #fff;
+  font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+  position: fixed;
+  top: 0;
+  left: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.dashboard-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.dashboard-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: transparent;
+  min-height: 80px;
+  margin-bottom: 20px;
+}
+
+.dashboard-main {
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.main-title {
+  font-size: 48px;
+  font-weight: 400;
+  color: #202124;
+  margin: 0 0 16px 0;
+  line-height: 1.15;
+  text-align: center;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.subtitle {
+  font-size: 20px;
+  color: #5f6368;
+  margin: 0 0 40px 0;
+  text-align: center;
+}
+
+.action-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 0 0 32px 0;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .dashboard-root {
+    padding: 16px;
+  }
+  
+  .main-title {
+    font-size: 36px;
+  }
+  
+  .subtitle {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-root {
+    padding: 16px;
+  }
+  
+  .main-title {
+    font-size: 36px;
+  }
+  
+  .subtitle {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 600px) {
+  .main-title {
+    font-size: 32px;
+  }
+  
+  .action-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .new-meeting-btn, .input-join-group {
+    width: 100%;
+    max-width: 340px;
+    min-width: 0;
+    margin: 0 auto;
+    box-sizing: border-box;
+  }
+  
+  .meeting-input {
+    width: 100px;
+    min-width: 60px;
+  }
+}
+
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: #fff !important;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
+
 </style>

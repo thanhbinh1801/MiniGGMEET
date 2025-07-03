@@ -69,6 +69,25 @@ class SocketService {
         }
       });
 
+
+
+
+      // Khi client gửi tin nhắn
+      socket.on("chat-message", ({ roomId, senderName, senderId, message }) => {
+        const timestamp = Date.now();
+        this.io.to(roomId).emit("chat-message", {
+          senderName,
+          senderId,
+          message,
+          timestamp,
+        });
+      });
+
+
+
+
+
+
       // Host phản hồi yêu cầu
       socket.on('host-respond-join', async ({ roomId, uid, accept }, callback) => {
         try {
@@ -144,24 +163,31 @@ class SocketService {
   }
 });
 
+
+
       // Quản lý phòng
       socket.on('join-room', ({ roomId, uid, name }) => {
         socket.join(roomId);
         this.users.set(socket.id, { uid, name, roomId });
-      
-        // Lấy danh sách các socketId đã có trong phòng (trừ chính mình)
-        const clients = Array.from(this.users.entries())
-          .filter(([sockId, user]) => user.roomId === roomId && sockId !== socket.id)
-          .map(([sockId, user]) => ({ socketId: sockId, uid: user.uid, name: user.name }));
-      
-        // Gửi cho peer mới danh sách các thành viên đã có
-        socket.emit('room-members', clients);
-      
-        // Thông báo cho các thành viên cũ về peer mới
+
+        // Gửi danh sách thành viên sau 300ms để các peer cũ kịp set listener
+        setTimeout(() => {
+          const clients = Array.from(this.users.entries())
+            .filter(([sockId, user]) => user.roomId === roomId && sockId !== socket.id)
+            .map(([sockId, user]) => ({ socketId: sockId, uid: user.uid, name: user.name }));
+
+          socket.emit('room-members', clients); // Gửi lại cho peer mới
+        }, 500);
+
+        // Thông báo cho các peer cũ biết có peer mới
         socket.to(roomId).emit('user-joined', {
           uid, name, socketId: socket.id
         });
       });
+
+
+
+
 
       socket.on('toggle-camera', ({ roomId, uid, isCameraOn }) => {
         // Broadcast cho các client khác trong phòng

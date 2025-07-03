@@ -172,17 +172,24 @@ export default {
       }
 
       // Thiết lập socket listeners
-      this.setupSocketListeners();
+    this.setupSocketListeners();
 
-      // Đợi socket kết nối xong rồi mới join room
-      if (socket.connected) {
-        await this.joinRoom();
-      } else {
-        socket.on('connect', async () => {
-          console.log("Socket connected in meeting!");
-          await this.joinRoom();
-        });
-      }
+// Đảm bảo delay nhỏ để các socket.on() kịp thiết lập
+setTimeout(async () => {
+  if (socket.connected) {
+    await this.joinRoom();
+  } else {
+    socket.on('connect', async () => {
+      await this.joinRoom();
+    });
+  }
+}, 300); // delay 300–500ms
+
+
+
+
+
+
     },
 
     async initializeLocalStream() {
@@ -239,13 +246,19 @@ export default {
       socket.on("toggle-camera", this.handleToggleCamera);
     },
 
-    async handleRoomMembers(members) {
-      for (const member of members) {
-        // Mặc định isCameraOn = true khi join
-        this.remoteParticipants[member.socketId] = { uid: member.uid, name: member.name, isCameraOn: true };
-        await this.setupPeerConnection(member.socketId, false);
-      }
-    },
+async handleRoomMembers(members) {
+  for (const member of members) {
+    const sid = member.socketId;
+    this.remoteParticipants[sid] = { uid: member.uid, name: member.name, isCameraOn: true };
+    setTimeout(async () => {
+      const pc = await this.setupPeerConnection(sid, true);
+      const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
+      await pc.setLocalDescription(offer);
+      socket.emit('offer', { target: sid, offer, sender: socket.id });
+    }, 300);
+  }
+}
+,
     
     async joinRoom() {
       console.log("=== JOINING ROOM ===");
